@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.streamlit/
+.DS_Store
+
+users.db
+
+*.pyc

@@ -1,0 +1,9 @@
+streamlit>=1.36,<2
+langgraph>=0.2
+langchain-core>=0.2
+langchain-ollama>=0.2
+langchain-community>=0.2
+tavily-python>=0.5
+pypdf>=4.2
+reportlab>=4.2
+python-dotenv>=1.0
