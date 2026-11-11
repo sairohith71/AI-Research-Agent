@@ -33,6 +33,34 @@ with st.sidebar:
     st.write("- Safe arithmetic calculator")
     st.write("- Uploaded PDF reader")
     st.write("- PDF report export")
+    st.sidebar.markdown("---")
+
+st.sidebar.subheader("👨‍💻 Contact Developer")
+
+st.sidebar.markdown("**Sai Rohith Royal**")
+
+st.sidebar.caption(
+    "AI/ML Developer | Computer Science Engineer"
+)
+
+st.sidebar.markdown(
+    "Have suggestions, questions, or feedback? "
+    "Feel free to connect with me!"
+)
+
+st.sidebar.markdown(
+    "🐙 [GitHub](https://github.com/sairohith71)"
+)
+
+st.sidebar.markdown(
+    "💼 [LinkedIn](https://www.linkedin.com/in/sai-rohith-royal/)"
+)
+
+st.sidebar.markdown(
+    "📧 [Email](mailto:sairohithroyal01@gmail.com)"
+)
+
+st.sidebar.markdown("---")
     st.divider()
     st.caption("Tavily key is read from .env. Planning, analysis, and report writing use local Ollama.")
 
