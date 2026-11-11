@@ -60,7 +60,6 @@ Connect the GitHub repository to Streamlit Community Cloud and set the app's mai
 
 ```toml
 TAVILY_API_KEY = "your_actual_tavily_key"
-OLLAMA_MODEL = "llama3.2:3b"
 ```
 
 Do not commit API keys, passwords, `.env`, or `users.db`. The local database contains account usernames and password hashes and is intentionally ignored by Git. Streamlit Cloud does not share your computer's local Ollama service; cloud deployment requires an Ollama server reachable from the app.
