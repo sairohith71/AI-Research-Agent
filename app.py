@@ -115,7 +115,7 @@ with st.sidebar:
     )
 
     st.markdown(
-        "📧 [Email](sairohithroyal01@gmail.com)"
+        "📧 [Email ](sairohithroyal01@gmail.com)"
     )
 
     st.divider()
