@@ -2,11 +2,12 @@ from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
+from streamlit.errors import StreamlitSecretNotFoundError
 
 from config import get_tavily_api_key
 from workflow.graph import build_research_graph
 from report import create_pdf
-from auth import show_login_page
+from auth import show_login_page, get_admin_data
 
 
 # ==========================================
@@ -61,6 +62,71 @@ with st.sidebar:
 # ==========================================
 # MAIN APPLICATION HEADER
 # ==========================================
+
+try:
+    configured_admin = st.secrets.get("ADMIN_USERNAME", "")
+except StreamlitSecretNotFoundError:
+    configured_admin = ""
+
+current_username = st.session_state.get("username", "")
+is_admin = (
+    bool(configured_admin)
+    and current_username.casefold()
+    == str(configured_admin).strip().casefold()
+)
+
+if is_admin:
+    with st.sidebar:
+        st.divider()
+        if st.button(
+            "🔐 Admin Dashboard",
+            use_container_width=True
+        ):
+            st.session_state["show_admin_dashboard"] = (
+                not st.session_state.get(
+                    "show_admin_dashboard", False
+                )
+            )
+
+    if st.session_state.get("show_admin_dashboard", False):
+        st.title("🔐 Admin Dashboard")
+        users, history = get_admin_data()
+
+        st.subheader("Registered Users")
+        user_rows = [
+            {
+                "Username": user["username"],
+                "Registration Date": user["created_at"],
+                "Last Login": user["last_login"] or "Never",
+                "Login Count": user["login_count"],
+            }
+            for user in users
+        ]
+        if user_rows:
+            st.dataframe(
+                user_rows,
+                hide_index=True,
+                use_container_width=True
+            )
+        else:
+            st.info("No registered users.")
+
+        st.subheader("Recent Login History")
+        history_rows = [
+            {
+                "Username": entry["username"],
+                "Logged In At": entry["logged_in_at"],
+            }
+            for entry in history
+        ]
+        if history_rows:
+            st.dataframe(
+                history_rows,
+                hide_index=True,
+                use_container_width=True
+            )
+        else:
+            st.info("No successful logins recorded.")
 
 st.title("🔎 AI-Powered Research Agent")
 

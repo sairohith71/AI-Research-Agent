@@ -9,7 +9,16 @@ ITERATIONS = 310_000
 
 def _connect():
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     conn.execute("CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY COLLATE NOCASE, salt BLOB NOT NULL, password_hash BLOB NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS login_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL COLLATE NOCASE,
+            logged_in_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            event TEXT NOT NULL DEFAULT 'success'
+        )
+    """)
     conn.commit()
     return conn
 
@@ -31,13 +40,34 @@ def register_user(username: str, password: str):
         return False, "That username is already registered. Please sign in instead."
 
 def verify_user(username: str, password: str) -> bool:
+    username = username.strip()
     with _connect() as conn:
-        row = conn.execute("SELECT salt, password_hash FROM users WHERE username = ?", (username.strip(),)).fetchone()
+        row = conn.execute(
+            "SELECT salt, password_hash FROM users WHERE username = ?",
+            (username,)
+        ).fetchone()
     if not row:
         return False
-    salt, expected_hash = row
-    actual_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, ITERATIONS)
-    return hmac.compare_digest(actual_hash, expected_hash)
+    actual_hash = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        row["salt"],
+        ITERATIONS
+    )
+    valid = hmac.compare_digest(
+        actual_hash,
+        row["password_hash"]
+    )
+    if valid:
+        with _connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO login_events (username, event)
+                VALUES (?, 'success')
+                """,
+                (username,)
+            )
+    return valid
 
 def show_login_page():
     import streamlit as st
@@ -93,3 +123,31 @@ def show_login_page():
     """,
     unsafe_allow_html=True
 )
+
+
+def get_admin_data():
+    with _connect() as conn:
+        users = conn.execute("""
+            SELECT
+                u.username,
+                u.created_at,
+                MAX(e.logged_in_at) AS last_login,
+                COUNT(e.id) AS login_count
+            FROM users u
+            LEFT JOIN login_events e
+                ON e.username = u.username
+                AND e.event = 'success'
+            GROUP BY u.username, u.created_at
+            ORDER BY u.created_at DESC
+        """).fetchall()
+        history = conn.execute("""
+            SELECT username, logged_in_at
+            FROM login_events
+            WHERE event = 'success'
+            ORDER BY logged_in_at DESC
+            LIMIT 200
+        """).fetchall()
+    return (
+        [dict(row) for row in users],
+        [dict(row) for row in history]
+    )
